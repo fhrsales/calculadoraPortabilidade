@@ -3,7 +3,7 @@
 		<div><label>Qual é valor do seu financiamento?<br><input autocomplete="off" spellcheck="false" autocorrect="off" name="valorDoEmprestimo"value="R$ 327.800,00" type="text" onfocus="limpaft(this)"></label></div>
 		<div><label>Qual é a quantidade de prestações (em meses)?<br><input autocomplete="off" spellcheck="false" autocorrect="off" name="prestacoes" value="10" type="text" onfocus="limpaft(this)"></label></div>
 		<div><label>Qual é a taxa de juros mensal proposta pelo banco?<br><input id="taxaDeJuros" autocomplete="off" spellcheck="false" autocorrect="off" size="10" maxlength="360" value="0,58%" title="taxa mensal" type="text" onfocus="limpaft(this)"> </label></div>
-		<div><label>Tem correção mensal (TR, IPCA, outros)?<br><input id="correcaoMensal" autocomplete="off" spellcheck="false" autocorrect="off" size="10" maxlength="30" value="0,2" title="Correção mensal" type="text" onfocus="limpaft(this)"> </label></div>
+		<div><label>Tem correção mensal (TR, IPCA, outros)?<br><input id="correcaoMensal" autocomplete="off" spellcheck="false" autocorrect="off" size="10" maxlength="30" value="0,2%" title="Correção mensal" type="text" onfocus="limpaft(this)"> </label></div>
 
 		<div class="col_4 thin column"><label>Qual é o sistema de amortização?<br><select name="tipo">
 					<option value="price">Tabela Price</option>
@@ -214,7 +214,7 @@ function comp_financiamento(np, ir, pv, periodo, tipo) {
 	var tabela;
 	switch (tipo.selectedIndex) {
 		case 0:
-			tabela = tabelaSAC(np, ir, pv, periodo);
+			tabela = tabelaPrice(np, ir, pv, periodo);
 			break;
 		case 1:
 			tabela = tabelaSAC(np, ir, pv, periodo);
