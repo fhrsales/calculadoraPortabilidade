@@ -1,0 +1,31 @@
+<script type="text/javascript" src="http://localhost/arte/calculadora-portabilidade/dist/scripts/calculadoraDaPortabilidade.js"></script>
+
+<div class="visible">
+	<form name="calculadoraPortabilidade">
+		<div><label>Qual é valor do seu financiamento?<br><input autocomplete="off" spellcheck="false" autocorrect="off" name="valorDoEmprestimo" value="R$ 325.500,00" type="text" onfocus="limpaft(this)"></label></div>
+		<div><label>Qual é a quantidade de prestações (em meses)?<br><input autocomplete="off" spellcheck="false" autocorrect="off" name="prestacoes" value="10" type="text" onfocus="limpaft(this)"></label></div>
+		<div><label>Qual é a taxa de juros proposta pelo banco?<br><input autocomplete="off" spellcheck="false" autocorrect="off" size="10" maxlength="30" name="taxaDeJuros" value="1,00%" title="taxa mensal" type="text" onfocus="limpaft(this)"> </label></div>
+		<div><label>Tem correção mensal (TR, IPCA, outros)?<br><input id="correcaoMensal" autocomplete="off" spellcheck="false" autocorrect="off" size="10" maxlength="30" name="cor" value="0" title="Correção mensal" type="text" onfocus="limpaft(this)"> </label></div>
+
+		<div class="col_4 thin column"><label>Qual é o sistema de amortização?<br><select name="tipo">
+					<option value="price">Tabela Price</option>
+					<option value="sac">Tabela SAC</option>
+
+				</select></label></div>
+	</form>
+	<div style="margin-top:4px">
+		<button id="calcull" type="button" onclick="calculaTabela()">Calcular</button>
+	</div>
+	<section id="mostra" style="display:none">
+		<div id="prestacaoInicial"></div>
+		<div id="prestacaoFinal"></div>
+		<div id="totalJuros"></div>
+		<div id="totalFinanciamento"></div>
+		<div class="col_12 column" id="resultado"></div>
+	</section>
+</div>
+
+<script type="text/javascript">
+	calculaTabela();
+
+</script>
