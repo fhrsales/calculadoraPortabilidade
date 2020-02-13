@@ -1,5 +1,3 @@
-<script type="text/javascript" src="http://localhost/arte/calculadora-portabilidade/dist/scripts/calculadoraDaPortabilidade.js"></script>
-
 <div class="visible">
 	<form name="calculadoraPortabilidade">
 		<div><label>Qual é valor do seu financiamento?<br><input autocomplete="off" spellcheck="false" autocorrect="off" name="valorDoEmprestimo" value="R$ 325.500,00" type="text" onfocus="limpaft(this)"></label></div>
@@ -26,6 +24,342 @@
 </div>
 
 <script type="text/javascript">
+	
+	Number.prototype.formatMoney = function (places, symbol, thousand, decimal) { //Formata números para moeda brasileira
+	places = !isNaN(places = Math.abs(places)) ? places : 2;
+	symbol = symbol !== undefined ? symbol : "$";
+	thousand = thousand || ",";
+	decimal = decimal || ".";
+	var number = this,
+		negative = number < 0 ? "-" : "",
+		i = parseInt(number = Math.abs(+number || 0).toFixed(places), 10) + "",
+		j = (j = i.length) > 3 ? j % 3 : 0;
+	return symbol + negative + (j ? i.substr(0, j) + thousand : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousand) + (places ? decimal + Math.abs(number - i).toFixed(places).slice(2) : "");
+};
+
+
+function calculaTabela(semEvento) {
+	var calculatorform = document.forms.calculadoraPortabilidade;
+	comp_financiamento(calculatorform.prestacoes.value, normalizaDecimalPtBr(calculatorform.taxaDeJuros.value), normalizaDecimalPtBr(calculatorform.valorDoEmprestimo.value),
+		calculatorform.periodo,
+		calculatorform.tipo);
+
+	prestacaoInicial_prestacaoFinal()
+	totalDosJuros();
+	totalDoFinanciamento();
+
+	document.getElementById('mostra').style.display = "block";
+	document.getElementById('calcull').innerHTML = "Recalcular";
+
+}
+
+//function preparaDecimais(formula) {
+//	var valor = "";
+//	var formula2 = "";
+//	var ci;
+//	for (ci = 0; ci < formula.length; ci++) {
+//		var cc = formula.charAt(ci);
+//		if (!isNaN(cc) || cc == "." || cc == ",") {
+//			valor += cc;
+//		} else if (valor != "") {
+//			formula2 += normalizaDecimalPtBr(valor) + cc;
+//			valor = "";
+//		} else {
+//			formula2 += cc;
+//		}
+//	}
+//	if (valor != "") {
+//		formula2 += normalizaDecimalPtBr(valor);
+//	}
+//	return formula2;
+//}
+
+function normalizaDecimalPtBr(numStr) {
+	var ci = numStr.length;
+	var le;
+	var ri = "";
+	var tmp = "";
+	var s = null;
+	var sehdec = true;
+	var sozinho = true;
+	for (ci--; ci >= 0; ci--) {
+		var cc = numStr.charAt(ci);
+		if (s == cc) sehdec = false;
+		if (s == null && (cc == "." || cc == ",")) {
+			s = cc
+			ri = tmp;
+			tmp = "";
+		} else if (cc == "." || cc == ",") {
+			sozinho = false;
+		}
+		if (!isNaN(cc)) {
+			tmp = cc + tmp;
+		}
+	}
+	le = tmp;
+	var resultado = le;
+	if (sehdec && sozinho && s == ",") resultado = le + concatOuVazio(",", ri);
+	if (sehdec && sozinho && s == ".") return le + ri;
+	else if (sehdec) return le + concatOuVazio(",", ri);
+	else return le + ri;
+}
+
+function concatOuVazio(se, ri) {
+	if (ri != "") return se + ri;
+	return "";
+}
+
+function formatNumFromPt2En(valorstr) {
+	valorstr = replaceAll(valorstr, '.', '|');
+	valorstr = replaceAll(valorstr, ',', '.');
+	valorstr = replaceAll(valorstr, '|', ',');
+	return valorstr;
+}
+
+function convertNum2Pt(valor, prec) {
+	if (prec == null) prec = 2;
+	var negativo = false;
+	var valorpt = "ERRO";
+	if (valor != null) {
+		valor = valor + "";
+		if (valor.indexOf("e+") != -1) return valor.replace(".", ",");
+		if (valor.charAt(0) == "") {
+			valor = valor.replace("-", "");
+			negativo = true;
+		}
+		if (isNaN(valor)) {
+			valorpt = valor;
+		} else {
+			valor = aproximaParaZero(valor);
+			valorpt = "";
+			var toks = valor.split(".");
+			var len = toks[0].length;
+			for (var c = 0; c < len; c++) {
+				var ci = len - 1 - c;
+				if (c != 0 && c % 3 == 0) valorpt = "." + valorpt;
+				valorpt = toks[0].charAt(ci) + valorpt;
+			}
+			if (toks.length == 2) {
+				if (toks[1].length < prec) {
+					toks[1] = toks[1] + zeros(prec - toks[1].length);
+				}
+				valorpt += "," + toks[1].substring(0, prec);
+			} else {
+				if (prec > 0) valorpt += "," + zeros(prec);
+			}
+		}
+	}
+	if (negativo) valorpt = "-" + valorpt;
+	return valorpt;
+}
+
+function aproximaParaZero(valor) {
+	if (valor.indexOf("e-") != -1) return "0";
+	return valor;
+}
+
+function zeros(algs) {
+	var k = 0;
+	var retorno = "";
+	for (; k < algs; k++) {
+		retorno += "0";
+	}
+	return retorno;
+}
+
+//function ucalc(formula, prec) {
+//	if (prec == null) prec = 2;
+//	return universalcalc(formula, prec);
+//}
+//function translate2En(formula) {
+//	var formulaen = formula;
+//	formulaen = replaceAll(formulaen, ",", ".")
+//	formulaen = replaceAll(formulaen, "|", ",");
+//	formulaen = replaceAll(formulaen, ";", ",");
+//	formulaen = replaceAll(formulaen, "--", "+");
+//	formulaen = replaceAll(formulaen, "-+", "+");
+//	formulaen = replaceAll(formulaen, "%%", "%");
+//	return formulaen;
+//}
+
+//function translate2Pt(formula) {
+//	var formulaen = formula;
+//	formulaen = replaceAll(formulaen, "PGTO", "PGTO");
+//	formulaen = replaceAll(formulaen, "SUM", "SOMA");
+//	formulaen = replaceAll(formulaen, "NPV", "VAL");
+//	formulaen = replaceAll(formulaen, "PV", "VA");
+//	formulaen = replaceAll(formulaen, "IRR", "TIR");
+//	formulaen = replaceAll(formulaen, "FV", "VF");
+//	formulaen = replaceAll(formulaen, "RATE", "TAXA");
+//	formulaen = replaceAll(formulaen, "NPER", "NPER");
+//	formulaen = replaceAll(formulaen, "POW", "POTÃŠNCIA");
+//	formulaen = replaceAll(formulaen, ".", ",")
+//	formulaen = replaceAll(formulaen, "|", ";");
+//	formulaen = replaceAll(formulaen, "--", "+");
+//	formulaen = replaceAll(formulaen, "-+", "+");
+//	formulaen = replaceAll(formulaen, "%%", "%");
+//	return formulaen;
+//}
+
+//function replaceAll(str, a, b) {
+//	if (str == null || a == b) return str;
+//	while (str.indexOf(a) >= 0) {
+//		str = str.replace(a, b);
+//	}
+//	return str;
+//}
+
+
+function comp_financiamento(np, ir, pv, periodo, tipo) {
+	var tabela;
+	switch (tipo.selectedIndex) {
+		case 0:
+			tabela = tabelaPrice(np, ir, pv, periodo);
+			break;
+		case 1:
+			tabela = tabelaSAC(np, ir, pv, periodo);
+			break;
+		default:
+			throw "comp_financiamento: tipo.selectedIndex invalido!";
+	}
+	if (tabela != null) {
+		tabela.header = ["nº", "Parcelas", "Amortização", "Correção TR", "Juros", "Saldo Devedor"];
+		var html = "<table id ='tabelaDetalhada' style='width: -webkit-fill-available;text-align:end'>";
+		html += '<tr class="top-row"><th>' + tabela.header[0] + '</th><th>' + tabela.header[1] + '</th><th>' + tabela.header[2] + '</th><th>' + tabela.header[3] + '</th><th>' + tabela.header[4] + '</th><th>' + tabela.header[5] + '</th></tr>';
+		for (ii in tabela.linhas) {
+			var lin = tabela.linhas[ii];
+			var classAlt = ii % 2 == 0 ? '' : 'class="alt"';
+			html += '<tr ' + classAlt + '><td class="numeroParcela">' + lin[0] + '</td><td class="parcelas">' + lin[1] + '</td><td class="amortizacao">' + lin[2] + '</td><td class="correcaoMensal">' + lin[3] + '</td><td class="jurosPagos">' + lin[4] + '</td><td  class="saldoDevedor">' + lin[5] + '</td></tr>';
+		}
+		html += '</table>';
+		document.getElementById('resultado').innerHTML = '<p>Abaixo veja como fica cada prestação:</p>' + html;
+	}
+}
+
+
+
+
+
+
+
+
+
+function Tabela() { // Cria a tabela
+	this.header = [];
+	this.linhas = [];
+}
+
+function tabelaSAC(prestacoes, taxaDeJuros, valorDoEmprestimo) { // Cálculo da tabela SAC
+	var tabela = new Tabela();
+	prestacoes = parseFloat(prestacoes + "");
+	taxaDeJuros = parseFloat(taxaDeJuros + "") / 100;
+	valorDoEmprestimo = parseFloat(valorDoEmprestimo + "");
+	var correcaoMensal = parseFloat(document.getElementById("correcaoMensal").value) / 100;
+	var i = 0;
+	var correcaoTR = valorDoEmprestimo * correcaoMensal;
+	var juros = taxaDeJuros * (valorDoEmprestimo + correcaoTR);
+	var amortizacao = (valorDoEmprestimo / prestacoes) * (1 + correcaoMensal);
+	var parcelas = amortizacao + juros;
+	var saldoDevedor = valorDoEmprestimo - (amortizacao - correcaoTR);
+
+
+	for (i = 0; i < prestacoes; i++) {
+		tabela.linhas.push([(i + 1) + "",
+		convertNum2Pt(parcelas),
+		convertNum2Pt(amortizacao),
+		convertNum2Pt(correcaoTR),
+		convertNum2Pt(juros),
+		convertNum2Pt(saldoDevedor)]);
+		correcaoTR = saldoDevedor * correcaoMensal;
+		juros = (saldoDevedor + correcaoTR) * taxaDeJuros;
+		correcaoTR = saldoDevedor * correcaoMensal;
+		amortizacao = amortizacao * (1 + correcaoMensal);
+		parcelas = amortizacao + juros;
+		saldoDevedor = (saldoDevedor - amortizacao) + correcaoTR;
+	}
+	return tabela;
+}
+
+function tabelaPrice(prestacoes, taxaDeJuros, valorDoEmprestimo) { // Cálculo da tabela Price
+	function PGTO(rate, nper, pv, fv, pb) { // Fórmula PGTO do Excel
+		function calculaPGTO(np, ir, fv, pv, pb) {
+			var PGTO = 0;
+			if (ir == 0.0) {
+				if (np != 0.0) {
+					PGTO = -(fv + pv) / np;
+				}
+			} else {
+				var q = Math.pow(1 + ir, np);
+				PGTO = -(ir * (fv + (q * pv))) / ((-1 + q) * (1 + ir * pb));
+			}
+			return PGTO;
+		}
+		//
+		if (isNaN(fv)) fv = 0;
+		if (isNaN(pb)) pb = 0;
+		return calculaPGTO(nper, rate, fv, pv, pb);
+	}
+
+	var tabela = new Tabela();
+	prestacoes = parseFloat(prestacoes + "");
+	taxaDeJuros = parseFloat(taxaDeJuros + "") / 100;
+	valorDoEmprestimo = parseFloat(valorDoEmprestimo + "");
+	var correcaoMensal = parseFloat(document.getElementById("correcaoMensal").value) / 100;
+	var i = 0;
+	var correcaoTR = (correcaoMensal * valorDoEmprestimo);
+	var parcelas = (PGTO(taxaDeJuros, prestacoes, -valorDoEmprestimo)) + ((PGTO(taxaDeJuros, prestacoes, -valorDoEmprestimo)) * correcaoMensal);
+	var juros = (valorDoEmprestimo + (correcaoMensal * valorDoEmprestimo)) / 100;
+
+	for (i = 0; i < prestacoes; i++) {
+		var amortizacao = (parcelas - juros);
+		var saldoDevedor = valorDoEmprestimo - (amortizacao - correcaoTR);
+		tabela.linhas.push([(i + 1) + "",
+		convertNum2Pt(parcelas),
+		convertNum2Pt(amortizacao),
+		convertNum2Pt(correcaoTR),
+		convertNum2Pt(juros),
+		convertNum2Pt(saldoDevedor)]);
+
+		correcaoTR = saldoDevedor * correcaoMensal;
+		juros = (saldoDevedor + (correcaoMensal * saldoDevedor)) / 100;
+		parcelas = (parcelas * correcaoMensal) + parcelas;
+		valorDoEmprestimo = saldoDevedor;
+	}
+	return tabela;
+}
+
+function prestacaoInicial_prestacaoFinal() { // Busca na tabela primeira e última prestação do financimento 
+	var buscaTabela = document.getElementById("tabelaDetalhada");
+	var ultimaLinhaDaTabela = buscaTabela.rows.length - 1;
+	var ultimaCelulaDaColunaParcelas = buscaTabela.rows[ultimaLinhaDaTabela].cells[1].innerHTML;
+	var primeiraCelulaDaColunaParcelas = buscaTabela.rows[1].cells[1].innerHTML;
+	document.getElementById('prestacaoInicial').innerHTML = '<span>Você pagará na primeira prestação:</span><br><span class="numerao">R$ ' + primeiraCelulaDaColunaParcelas + '</span>';
+	document.getElementById('prestacaoFinal').innerHTML = '<span>Você pagará na última prestação:</span><br><span class="numerao">R$ ' + ultimaCelulaDaColunaParcelas + '</span>';
+}
+
+function totalDosJuros() { // Soma todas as celulas da coluna de juros na tabela e apresenta o resultado na parte superior
+	var somaColunaJuros = document.querySelectorAll('.jurosPagos')
+	var totalSomaColunaJuros = 0
+	for (var i = 0; i < somaColunaJuros.length; i++) {
+		var somaNovaCelulaJuros = parseFloat(somaColunaJuros[i].textContent.replace('.', '').replace(',', '.'));
+		totalSomaColunaJuros = totalSomaColunaJuros + somaNovaCelulaJuros;
+	}
+	document.getElementById('totalJuros').innerHTML = '<span>Você pagará de juros:<span><br><span class="numerao">' + totalSomaColunaJuros.formatMoney(2, "R$ ", ".", ",") + '</span>';
+}
+
+function totalDoFinanciamento() { // Soma todas as celulas da coluna de parcelas na tabela e apresenta o resultado na parte superior
+	var somaColunaParcelas = document.querySelectorAll('.parcelas')
+	var totalsomaColunaParcelas = 0
+	for (var i = 0; i < somaColunaParcelas.length; i++) {
+		var somaNovaCelulaParcela = parseFloat(somaColunaParcelas[i].textContent.replace('.', '').replace(',', '.'));
+		totalsomaColunaParcelas = totalsomaColunaParcelas + somaNovaCelulaParcela;
+	}
+	document.getElementById('totalFinanciamento').innerHTML = '<span>E o valor total do seu financiamento (já contando os juros) será de:<span><br><span class="numerao">' + totalsomaColunaParcelas.formatMoney(2, "R$ ", ".", ",") + '</span>';
+}
+
+	
+	
+	
 	calculaTabela();
 
 </script>
